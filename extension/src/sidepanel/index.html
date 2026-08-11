@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Context Bridge</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span></div>
+        <div>
+          <strong>Context Bridge</strong>
+          <small>Private context, under your control</small>
+        </div>
+      </div>
+      <button id="lockButton" class="icon-button" type="button" title="Lock vault" aria-label="Lock vault" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0110 0v3m-11 0h12v10H6z"/></svg>
+      </button>
+    </header>
+
+    <div class="status-rail" id="statusRail" hidden>
+      <span class="status-pill local"><i></i><span id="modeStatus">Local only</span></span>
+      <span class="status-pill"><i id="vaultDot"></i><span id="vaultStatus">Locked</span></span>
+      <span class="status-pill" id="scanPill"><i></i><span id="scanStatus">Not scanned</span></span>
+      <span class="status-pill warning" id="dirtyPill" hidden><i></i>Unsaved</span>
+    </div>
+
+    <main id="main" tabindex="-1">
+      <section id="loadingView" class="center-view" aria-labelledby="loadingTitle">
+        <div class="orb-loader" aria-hidden="true"></div>
+        <h1 id="loadingTitle">Opening your private workspace</h1>
+        <p>Checking the local vault. Nothing is being sent anywhere.</p>
+      </section>
+
+      <section id="onboardingView" class="center-view hero-view" hidden aria-labelledby="onboardingTitle">
+        <div class="hero-art" aria-hidden="true">
+          <div class="hero-core">CB</div><span class="orbit one"></span><span class="orbit two"></span>
+        </div>
+        <div class="eyebrow">LOCAL-FIRST AI HANDOFFS</div>
+        <h1 id="onboardingTitle">Move context.<br><em>Keep control.</em></h1>
+        <p class="lead">Build compact, reviewable Context Packs for ChatGPT, Claude, Gemini, Codex and any other assistant—without background capture or cloud processing.</p>
+        <div class="promise-grid" aria-label="Privacy promises">
+          <div><span>01</span><strong>You choose</strong><small>Only selected or pasted text</small></div>
+          <div><span>02</span><strong>You review</strong><small>Secrets checked before sharing</small></div>
+          <div><span>03</span><strong>You own</strong><small>AES-GCM encrypted local vault</small></div>
+        </div>
+        <form id="setupForm" class="stack-form card" novalidate>
+          <div class="section-heading"><div><span class="step-number">1</span><h2>Create your vault</h2></div><span class="privacy-chip">Offline</span></div>
+          <label for="setupPassphrase">Vault passphrase</label>
+          <div class="password-wrap"><input id="setupPassphrase" type="password" minlength="12" maxlength="1024" autocomplete="new-password" required><button class="reveal-button" data-reveal="setupPassphrase" type="button" aria-label="Show passphrase">Show</button></div>
+          <div class="strength-track" aria-hidden="true"><span id="strengthBar"></span></div>
+          <small id="strengthText">Use 12+ characters. A long, unique phrase is easiest to remember.</small>
+          <label for="setupConfirmation">Confirm passphrase</label>
+          <input id="setupConfirmation" type="password" minlength="12" maxlength="1024" autocomplete="new-password" required>
+          <label class="check-row"><input id="setupRemember" type="checkbox"><span><strong>Remember until Chrome closes</strong><small>The derived key stays only in session memory.</small></span></label>
+          <div class="notice"><strong>No recovery key.</strong> If this passphrase is lost, encrypted packs cannot be recovered.</div>
+          <button class="button primary wide" type="submit">Create encrypted vault</button>
+        </form>
+      </section>
+
+      <section id="lockedView" class="center-view locked-view" hidden aria-labelledby="lockedTitle">
+        <div class="lock-visual" aria-hidden="true"><span></span></div>
+        <div class="eyebrow">VAULT PROTECTED</div>
+        <h1 id="lockedTitle">Welcome back</h1>
+        <p>Your pack titles and content remain hidden until the vault is unlocked.</p>
+        <form id="unlockForm" class="stack-form card" novalidate>
+          <label for="unlockPassphrase">Vault passphrase</label>
+          <div class="password-wrap"><input id="unlockPassphrase" type="password" maxlength="1024" autocomplete="current-password" required autofocus><button class="reveal-button" data-reveal="unlockPassphrase" type="button" aria-label="Show passphrase">Show</button></div>
+          <label class="check-row"><input id="unlockRemember" type="checkbox"><span><strong>Remember until Chrome closes</strong><small>Cleared when the browser exits.</small></span></label>
+          <button class="button primary wide" type="submit">Unlock locally</button>
+        </form>
+        <small class="muted">Context Bridge cannot reset or recover your passphrase.</small>
+      </section>
+
+      <div id="workspace" hidden>
+        <section id="captureView" class="view" aria-labelledby="captureTitle">
+          <div class="page-heading">
+            <div><div class="eyebrow">NEW HANDOFF</div><h1 id="captureTitle">Bring in context</h1><p>Nothing is captured until you choose an action.</p></div>
+            <span class="privacy-chip">Stays local</span>
+          </div>
+          <div class="action-grid">
+            <button id="captureSelectionButton" class="action-card accent" type="button">
+              <span class="action-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg></span><strong>Capture selected text</strong><small>From the active web page</small><span class="arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+            </button>
+            <button id="providerCaptureButton" class="action-card provider-card accent" type="button">
+              <span class="action-icon provider-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+              <strong>Capture conversation</strong>
+              <small>Active tab · visible messages only</small>
+              <span id="detectedProviderBadge" class="detected-provider" hidden></span>
+              <span class="arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+            </button>
+          </div>
+          <div class="divider"><span>or paste manually</span></div>
+          <div class="card input-card">
+            <div class="field-header"><label for="manualInput">Source material</label><button id="clearInputButton" class="text-button" type="button">Clear</button></div>
+            <textarea id="manualInput" rows="11" maxlength="1048576" placeholder="Paste notes, an assistant response, a bug report, or a conversation excerpt…"></textarea>
+            <div class="input-meta">
+              <span><strong id="sourceCharacters">0</strong> characters</span>
+              <span>≈ <strong id="sourceTokens">0</strong> tokens</span>
+              <span id="inputSizeState">Ready</span>
+            </div>
+            <div class="two-column">
+              <label>Source trust<select id="trustSelect"><option value="user">My own notes</option><option value="agent">Assistant output</option><option value="web">Web page</option></select></label>
+              <label>Pack title<input id="draftTitle" type="text" maxlength="160" placeholder="e.g. Payment status fix"></label>
+            </div>
+            <p class="privacy-line"><span>●</span> Core mode makes no network requests. Pasted text is treated as data, never authority.</p>
+            <button id="reviewSourceButton" class="button primary wide" type="button" disabled>Scan and build Context Pack</button>
+          </div>
+        </section>
+
+        <section id="securityView" class="view" hidden aria-labelledby="securityTitle">
+          <button class="back-button" data-back="captureView" type="button">← Back to source</button>
+          <div class="page-heading">
+            <div><div class="eyebrow">TRUST BOUNDARY</div><h1 id="securityTitle">Security review</h1><p>Review every finding before context enters the vault.</p></div>
+            <div id="securityScore" class="security-score">Scanning</div>
+          </div>
+          <div id="findingSummary" class="summary-grid"></div>
+          <div id="findingsList" class="findings-list" aria-live="polite"></div>
+          <div id="noFindings" class="empty-state" hidden><span>✓</span><strong>No known secrets or sensitive patterns found</strong><small>Detection reduces risk but cannot guarantee every secret is found.</small></div>
+          <div class="card review-source">
+            <div class="field-header"><strong>Reviewed source</strong><button id="redactCriticalButton" class="button danger subtle" type="button" hidden>Redact critical secrets</button></div>
+            <textarea id="reviewedSource" rows="9" spellcheck="false"></textarea>
+          </div>
+          <label id="sourceWarningAckRow" class="check-row warning-row" hidden><input id="sourceWarningAck" type="checkbox"><span><strong>I reviewed the sensitive-data warnings</strong><small>I understand this content may identify a person, company, repository, or device.</small></span></label>
+          <button id="continueToEditorButton" class="button primary wide" type="button">Create draft pack</button>
+        </section>
+
+        <section id="editorView" class="view" hidden aria-labelledby="editorTitle">
+          <button class="back-button" data-back="captureView" type="button">← Back</button>
+          <div class="page-heading">
+            <div><div class="eyebrow">STRUCTURED DRAFT</div><h1 id="editorTitle">Shape the handoff</h1><p>Only confirmed information belongs in structured fields.</p></div>
+            <label class="revision-control">Revision<select id="revisionSelect" aria-label="Revision history"></select></label>
+          </div>
+          <div class="editor-stack">
+            <label class="card field-card">Pack title<input id="editorPackTitle" type="text" maxlength="160"></label>
+            <label class="card field-card featured">Goal<textarea id="editorGoal" rows="3" maxlength="8000" placeholder="What should the receiving assistant accomplish?"></textarea></label>
+            <div class="two-column editor-columns">
+              <label class="card field-card">Confirmed facts<textarea id="editorFacts" rows="5" placeholder="One item per line"></textarea></label>
+              <label class="card field-card">Constraints<textarea id="editorConstraints" rows="5" placeholder="One item per line"></textarea></label>
+              <label class="card field-card">Decisions<textarea id="editorDecisions" rows="5" placeholder="One item per line"></textarea></label>
+              <label class="card field-card">Completed<textarea id="editorCompleted" rows="5" placeholder="One item per line"></textarea></label>
+              <label class="card field-card">Blockers<textarea id="editorBlockers" rows="4" placeholder="One item per line"></textarea></label>
+              <label class="card field-card">Unresolved<textarea id="editorUnresolved" rows="4" placeholder="One item per line"></textarea></label>
+              <label class="card field-card">Next actions<textarea id="editorNextActions" rows="4" placeholder="One item per line"></textarea></label>
+              <label class="card field-card">Sensitivity<select id="editorSensitivity"><option value="normal">Normal</option><option value="private">Private</option><option value="secret">Secret</option></select></label>
+              <label class="card field-card">Expiry<input id="editorExpiry" type="date"><small>Leave blank to keep until deleted.</small></label>
+            </div>
+            <label class="card field-card">Evidence kept as data<textarea id="editorEvidence" rows="8" placeholder="Unstructured evidence remains visibly untrusted."></textarea><small>Separate evidence blocks with a blank line.</small></label>
+            <div class="card field-card">
+              <div class="field-header"><div><strong>Protected exact artifacts</strong><small>Code, paths, URLs, commands and errors are never paraphrased.</small></div><span id="artifactCount" class="count-badge">0</span></div>
+              <div id="artifactList" class="artifact-list"></div>
+            </div>
+            <label class="card field-card">Optional output policy<select id="policySelect"><option value="off">Off — add nothing</option><option value="lean">Lean — smallest correct solution</option><option value="ultra">Ponytail ultra — challenge speculative work</option><option value="caveman">Caveman ultra — terse output</option><option value="review">Review — findings before changes</option></select><small id="policyEstimate">No policy will be added.</small></label>
+          </div>
+          <div class="sticky-actions"><button id="savePackButton" class="button secondary" type="button">Save encrypted</button><button id="previewButton" class="button primary" type="button">Save and preview →</button></div>
+        </section>
+
+        <section id="previewView" class="view" hidden aria-labelledby="previewTitle">
+          <button class="back-button" data-back="editorView" type="button">← Edit pack</button>
+          <div class="page-heading">
+            <div><div class="eyebrow">FINAL OUTBOUND VIEW</div><h1 id="previewTitle">Review every character</h1><p>Outbound actions use exactly the revision shown below.</p></div>
+            <span id="previewModeBadge" class="revision-badge">Full</span>
+          </div>
+          <div class="card preview-controls">
+            <div class="segmented" role="group" aria-label="Output mode"><button id="fullModeButton" class="active" type="button">Full pack</button><button id="deltaModeButton" type="button">Delta</button></div>
+            <div class="two-column">
+              <label>Destination label<input id="destinationLabel" type="text" maxlength="100" placeholder="e.g. Codex review"></label>
+              <label>Format<select id="exportFormat"><option value="markdown">Readable Markdown</option><option value="json">Validated JSON</option></select></label>
+            </div>
+          </div>
+          <div class="metrics-row">
+            <div><small>Source</small><strong id="metricSourceChars">0</strong><span>characters</span></div>
+            <div><small>Output</small><strong id="metricOutputChars">0</strong><span>characters</span></div>
+            <div><small>Estimate</small><strong id="metricOutputTokens">0</strong><span>tokens</span></div>
+            <div class="reduction"><small>Reduction</small><strong id="metricReduction">0%</strong><span>estimate</span></div>
+          </div>
+          <div id="previewAlert" class="notice" hidden></div>
+          <div class="preview-box"><div class="preview-toolbar"><span id="previewRevisionText">Revision 1 · full</span><button id="selectPreviewButton" class="text-button" type="button">Select all</button></div><textarea id="outboundPreview" readonly spellcheck="false" rows="21"></textarea></div>
+          <div id="outboundFindings" class="findings-list compact"></div>
+          <label id="outboundWarningAckRow" class="check-row warning-row" hidden><input id="outboundWarningAck" type="checkbox"><span><strong>I reviewed every warning in this outgoing revision</strong><small>Required again if the pack or output format changes.</small></span></label>
+          <div class="share-grid">
+            <button id="copyButton" class="button primary" type="button">Copy reviewed context</button>
+            <button id="insertButton" class="button secondary" type="button">Insert without sending</button>
+            <button id="downloadButton" class="button secondary" type="button">Download reviewed file</button>
+            <button id="activateButton" class="button secondary" type="button">Activate for 15 minutes</button>
+          </div>
+          <p class="manual-note">Provider insertion never clicks Send or simulates Enter. You must inspect the composer and submit manually.</p>
+        </section>
+
+        <section id="packsView" class="view" hidden aria-labelledby="packsTitle">
+          <div class="page-heading"><div><div class="eyebrow">ENCRYPTED VAULT</div><h1 id="packsTitle">Saved packs</h1><p>Search runs locally after unlock.</p></div><div class="button-row"><label class="button secondary compact-button file-button">Import JSON<input id="packImportInput" type="file" accept="application/json,.json"></label><button id="newPackButton" class="button primary compact-button" type="button">+ New</button></div></div>
+          <label class="search-box"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></span><input id="packSearch" type="search" placeholder="Search pack titles"></label>
+          <div id="packsList" class="packs-list"></div>
+          <div id="emptyPacks" class="empty-state" hidden><span><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></span><strong>No Context Packs yet</strong><small>Capture selected text or paste notes to create your first handoff.</small></div>
+          <div id="corruptNotice" class="notice danger-notice" hidden></div>
+        </section>
+
+        <section id="settingsView" class="view" hidden aria-labelledby="settingsTitle">
+          <div class="page-heading"><div><div class="eyebrow">LOCAL CONTROLS</div><h1 id="settingsTitle">Settings</h1><p>Security defaults stay conservative.</p></div></div>
+          <form id="settingsForm" class="settings-stack">
+            <div class="card field-card"><div class="section-heading"><div><span class="step-number">A</span><h2>Vault behavior</h2></div></div>
+              <div class="two-column">
+                <label>Auto-lock<select id="autoLockMinutes"><option value="5">5 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option></select></label>
+                <label>Default expiry<select id="defaultExpiryDays"><option value="0">Never</option><option value="7">7 days</option><option value="30">30 days</option><option value="90">90 days</option></select></label>
+                <label>Context budget<input id="contextBudget" type="number" min="4000" max="250000" step="1000"></label>
+                <label>Theme<select id="themeSelect"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+              </div>
+              <label>Private deny patterns<textarea id="blockedPatterns" rows="4" placeholder="One company name, domain, project, or path per line"></textarea></label>
+              <button class="button primary" type="submit">Save encrypted settings</button>
+            </div>
+          </form>
+          <div class="card field-card">
+            <div class="section-heading"><div><span class="step-number">B</span><h2>MCP Bridge</h2></div><span id="mcpBridgeStatusBadge" class="status-badge status-badge--inactive">Not set up</span></div>
+            <p>Expose one approved pack to Claude Desktop, Cursor, or any MCP-compatible AI tool — without any cloud connection.</p>
+            <div id="mcpBridgeNotice" class="notice" hidden>
+              <strong>Node.js required.</strong> The bridge runs as a local Node.js process. <a href="https://nodejs.org" target="_blank" rel="noopener">Download Node.js</a> if not installed.
+            </div>
+            <div id="mcpBridgeInstructions" class="mcp-instructions" hidden>
+              <strong>After running the setup script:</strong>
+              <ol>
+                <li>Reload this extension in <code>chrome://extensions/</code></li>
+                <li>Add to <strong>Claude Desktop</strong> (<code>claude_desktop_config.json</code>):
+                  <pre id="claudeConfigSnippet" class="code-block"></pre>
+                </li>
+                <li>Restart Claude Desktop / Cursor and the <code>get_active_context</code> tool will appear.</li>
+              </ol>
+            </div>
+            <div class="button-row">
+              <button id="setupMcpButton" class="button primary" type="button">⬇ Download setup script</button>
+              <button id="checkMcpButton" class="button secondary" type="button">Check status</button>
+            </div>
+            <small class="muted">The setup script runs entirely on your machine. Nothing is sent to any server.</small>
+          </div>
+          <div class="card field-card">
+            <div class="section-heading"><div><span class="step-number">C</span><h2>Encrypted backup</h2></div></div>
+            <p>Backups contain ciphertext and vault metadata, never the passphrase.</p>
+            <div class="button-row"><button id="backupButton" class="button secondary" type="button">Export encrypted backup</button><label class="button secondary file-button">Import backup<input id="backupInput" type="file" accept=".json,application/json"></label></div>
+          </div>
+          <form id="passphraseForm" class="card field-card">
+            <div class="section-heading"><div><span class="step-number">D</span><h2>Change passphrase</h2></div></div>
+            <label>Current passphrase<input id="currentPassphrase" type="password" autocomplete="current-password"></label>
+            <label>New passphrase<input id="newPassphrase" type="password" minlength="12" autocomplete="new-password"></label>
+            <label>Confirm new passphrase<input id="newPassphraseConfirmation" type="password" minlength="12" autocomplete="new-password"></label>
+            <button class="button secondary" type="submit">Re-encrypt vault</button>
+          </form>
+          <div class="card danger-zone">
+            <strong>Danger zone</strong><p>Deletion removes extension records, but browser or OS backups may still exist.</p>
+            <div class="button-row"><button id="deleteAllPacksButton" class="button danger subtle" type="button">Delete all packs</button><button id="destroyVaultButton" class="button danger" type="button">Delete vault and settings</button></div>
+          </div>
+        </section>
+
+        <section id="diagnosticsView" class="view" hidden aria-labelledby="diagnosticsTitle">
+          <div class="page-heading"><div><div class="eyebrow">CONTENT-FREE STATUS</div><h1 id="diagnosticsTitle">Diagnostics</h1><p>No prompt text or secrets appear here.</p></div></div>
+          <div class="diagnostic-grid">
+            <div class="card"><small>Extension</small><strong id="diagVersion">—</strong><span>Manifest V3</span></div>
+            <div class="card"><small>Mode</small><strong id="diagMode">Local only</strong><span id="diagBridge">Bridge disabled</span></div>
+            <div class="card"><small>Vault records</small><strong id="diagPacks">0</strong><span>encrypted packs</span></div>
+            <div class="card"><small>Adapter status</small><strong>On demand</strong><span>never auto-submit</span></div>
+          </div>
+          <div class="card field-card"><strong>Core permissions</strong><div id="permissionList" class="permission-list"></div></div>
+          <div class="card field-card">
+            <div class="field-header"><div><strong>Privacy-preserving audit trail</strong><small>Counts and outcomes only; never captured text.</small></div><button id="clearAuditButton" class="text-button" type="button">Clear</button></div>
+            <div id="auditList" class="audit-list"></div>
+          </div>
+          <div class="card field-card">
+            <div class="field-header"><div><strong>Local MCP bridge</strong><small id="diagBridgeStatus">Checking…</small></div><button id="revokeBridgeButton" class="text-button" type="button">Revoke</button></div>
+            <p id="bridgeStatusText">The bridge exposes one approved pack through the read-only <code>get_active_context</code> tool.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <nav id="bottomNav" class="bottom-nav" hidden aria-label="Primary">
+      <button class="active" data-nav="captureView" type="button"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>Capture</button>
+      <button data-nav="packsView" type="button"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span>Packs</button>
+      <button data-nav="settingsView" type="button"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Settings</button>
+      <button data-nav="diagnosticsView" type="button"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>Status</button>
+    </nav>
+  </div>
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <script src="index.js" type="module"></script>
+</body>
+</html>

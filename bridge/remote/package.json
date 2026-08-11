@@ -1,0 +1,13 @@
+{
+  "name": "@context-bridge/remote",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/node": "2.0.0",
+    "@modelcontextprotocol/server": "2.0.0",
+    "jose": "6.2.8",
+    "pg": "8.23.0",
+    "zod": "4.4.3"
+  }
+}

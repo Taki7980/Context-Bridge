@@ -1,0 +1,9 @@
+{
+  "name": "com.contextbridge.local",
+  "description": "Context Bridge local MCP activation host",
+  "path": "__HOST_WRAPPER_PATH__",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://__EXTENSION_ID__/"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "useUnknownInCatchVariables": true,
+    "noEmit": true,
+    "lib": ["ES2024", "DOM", "DOM.Iterable", "WebWorker"],
+    "types": ["chrome", "node"],
+    "skipLibCheck": true
+  },
+  "include": [
+    "extension/**/*.ts",
+    "shared/**/*.ts",
+    "bridge/**/*.ts",
+    "benchmarks/**/*.ts",
+    "tests/**/*.ts"
+  ]
+}
