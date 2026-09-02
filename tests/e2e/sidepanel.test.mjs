@@ -43,6 +43,7 @@ test("side panel completes a reviewed local handoff at narrow width", async (con
     window.prompt = () => "DELETE VAULT";
     window.chrome = {
       runtime: {
+        onMessage: { addListener: () => {} },
         sendMessage: async (request) => {
           appState.messages.push({ type: request.type, keys: Object.keys(request).sort() });
           let data;
