@@ -38,7 +38,7 @@ export function captureVisibleConversation(
     "[class*='bot-message']", "[class*='BotMessage']", "[class*='human-message']", "[class*='HumanMessage']",
     "[class*='user-message']", "[class*='UserMessage']",
     // Data attributes
-    "[data-role='assistant']", "[data-role='user']", "[data-message-role]", "[data-author-role]",
+    "[data-role='assistant']", "[data-role='user']", "[data-message-role]", "[data-author-role]", "[data-message-author-role]",
     "[data-testid^='conversation-turn']", "[data-testid^='user-message']", "[data-testid='assistant-message']",
     "user-query", "model-response", "message-content",
     // Fallbacks
@@ -105,6 +105,7 @@ export function insertProviderText(
 
   const unique = [...new Set(candidates)];
   if (unique.length === 0) return { ok: false, error: "No composer input found on this page" };
+  if (unique.length !== 1) return { ok: false, error: "Provider composer selector was ambiguous" };
   const target = unique[0] as HTMLTextAreaElement | HTMLElement;
 
   if (target instanceof HTMLTextAreaElement) {
