@@ -28,20 +28,16 @@ export function captureVisibleConversation(
   documentValue: Document = document,
   hostname = typeof location === "undefined" ? "" : location.hostname
 ): { ok: boolean; text?: string; error?: string; characters?: number } {
-  // Use generic selectors to target conversation nodes and avoid sidebars/navigation
   const captureSelectors = [
-    // Modern semantic chat tags and common generic wrappers
     "main [class*='message-content']", "main [class*='chat-message']", "main [class*='message-text']",
     "[class*='message-content']", "[class*='MessageContent']", "[class*='chat-message']", "[class*='ChatMessage']",
     "[class*='message-text']", "[class*='MessageText']", "[class*='response-text']", "[class*='ResponseText']",
     "[class*='assistant-message']", "[class*='AssistantMessage']", "[class*='ai-message']", "[class*='AiMessage']",
     "[class*='bot-message']", "[class*='BotMessage']", "[class*='human-message']", "[class*='HumanMessage']",
     "[class*='user-message']", "[class*='UserMessage']",
-    // Data attributes
     "[data-role='assistant']", "[data-role='user']", "[data-message-role]", "[data-author-role]", "[data-message-author-role]",
     "[data-testid^='conversation-turn']", "[data-testid^='user-message']", "[data-testid='assistant-message']",
     "user-query", "model-response", "message-content",
-    // Fallbacks
     "article[class*='message']", "article[class*='Message']",
     "main article p", "main p", "[role='main'] p", "article p"
   ];
@@ -53,19 +49,16 @@ export function captureVisibleConversation(
       return el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden";
     });
 
-  // Remove nodes that are children of other matched nodes to avoid duplication
   const nodes = candidates.filter((node) => !candidates.some((parent) => parent !== node && parent.contains(node)));
-
   const unique = [...new Set(nodes.map((n) => ((n as HTMLElement).innerText ?? n.textContent ?? "").trim()).filter(Boolean))];
   const text = unique.join("\n\n");
-  
+
   if (!text) {
-    // Ultimate fallback if no selectors matched but we need something
     const fallbackText = (documentValue.querySelector("main") as HTMLElement)?.innerText;
     if (fallbackText?.trim()) {
-       const bytes = new TextEncoder().encode(fallbackText).byteLength;
-       if (bytes > 1_048_576) return { ok: false, error: "Visible conversation exceeds the 1 MiB limit", characters: fallbackText.length };
-       return { ok: true, text: fallbackText, characters: fallbackText.length };
+      const bytes = new TextEncoder().encode(fallbackText).byteLength;
+      if (bytes > 1_048_576) return { ok: false, error: "Visible conversation exceeds the 1 MiB limit", characters: fallbackText.length };
+      return { ok: true, text: fallbackText, characters: fallbackText.length };
     }
     return { ok: false, error: "No visible conversation content found on this page" };
   }
@@ -89,10 +82,12 @@ export function insertProviderText(
     "textarea[placeholder*='type' i]",
     "[contenteditable='true'][data-placeholder]",
     "[contenteditable='true'][placeholder]",
+    "[contenteditable='true'][data-testid*='composer' i]",
     "[contenteditable='true'][class*='editor']",
     "[contenteditable='true'][class*='input']",
     "[contenteditable='true'][class*='composer']",
     "[contenteditable='true'][class*='message']",
+    "rich-textarea [contenteditable='true']",
     "textarea",
   ];
 
@@ -100,7 +95,7 @@ export function insertProviderText(
     .flatMap((sel) => [...documentValue.querySelectorAll(sel)])
     .filter((node) => {
       const el = node as HTMLElement;
-      return el.getClientRects().length > 0 && !el.hasAttribute("disabled");
+      return el.getClientRects().length > 0 && !el.hasAttribute("disabled") && getComputedStyle(el).visibility !== "hidden";
     });
 
   const unique = [...new Set(candidates)];
