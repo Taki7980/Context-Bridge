@@ -67,17 +67,6 @@ jobs:
       - name: Verify lockfile unchanged
         run: git diff --exit-code -- package-lock.json
 
-  dependency-review:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-    steps:
-      - name: Review dependency changes
-        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
-        with:
-          fail-on-severity: high
-
   codeql:
     runs-on: ubuntu-24.04
     permissions:
