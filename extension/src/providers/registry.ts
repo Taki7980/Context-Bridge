@@ -54,12 +54,6 @@ export function captureVisibleConversation(
   const text = unique.join("\n\n");
 
   if (!text) {
-    const fallbackText = (documentValue.querySelector("main") as HTMLElement)?.innerText;
-    if (fallbackText?.trim()) {
-      const bytes = new TextEncoder().encode(fallbackText).byteLength;
-      if (bytes > 1_048_576) return { ok: false, error: "Visible conversation exceeds the 1 MiB limit", characters: fallbackText.length };
-      return { ok: true, text: fallbackText, characters: fallbackText.length };
-    }
     return { ok: false, error: "No visible conversation content found on this page" };
   }
 

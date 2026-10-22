@@ -4,5 +4,6 @@ release/
 .test-dist/
 benchmarks/results.json
 *.log
+test-results/
 .env
 .DS_Store

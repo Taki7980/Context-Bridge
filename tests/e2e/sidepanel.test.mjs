@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
+import { existsSync, readdirSync } from "node:fs";
 import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
@@ -10,13 +11,64 @@ import { build } from "esbuild";
 const root = path.resolve(import.meta.dirname, "../../dist/extension");
 const screenshotDirectory = path.resolve(import.meta.dirname, "../../test-results");
 
+async function resolveBrowser() {
+  if (process.env.CHROME_BIN && existsSync(process.env.CHROME_BIN)) {
+    return { executablePath: process.env.CHROME_BIN, args: ["--no-sandbox", "--disable-gpu"] };
+  }
+  if (process.platform === "win32") {
+    const localAppData = process.env.LOCALAPPDATA || "";
+    const playwrightDir = path.join(localAppData, "ms-playwright");
+    if (existsSync(playwrightDir)) {
+      for (const entry of readdirSync(playwrightDir)) {
+        const candidate = path.join(playwrightDir, entry, "chrome-win64", "chrome.exe");
+        if (existsSync(candidate)) return { executablePath: candidate, args: ["--no-sandbox", "--disable-gpu"] };
+      }
+    }
+    const winCandidates = [
+      "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
+      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+      "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+      "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
+    ];
+    for (const candidate of winCandidates) {
+      if (existsSync(candidate)) return { executablePath: candidate, args: ["--no-sandbox", "--disable-gpu"] };
+    }
+  } else if (process.platform === "darwin") {
+    const macCandidates = [
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+      "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+    ];
+    for (const candidate of macCandidates) {
+      if (existsSync(candidate)) return { executablePath: candidate, args: ["--no-sandbox", "--disable-gpu"] };
+    }
+  } else {
+    const linuxCandidates = [
+      "/usr/bin/google-chrome",
+      "/usr/bin/chromium-browser",
+      "/usr/bin/chromium",
+      "/usr/bin/brave-browser",
+    ];
+    for (const candidate of linuxCandidates) {
+      if (existsSync(candidate)) return { executablePath: candidate, args: ["--no-sandbox", "--disable-gpu"] };
+    }
+  }
+  try {
+    serverlessChromium.setGraphicsMode = false;
+    const executablePath = await serverlessChromium.executablePath();
+    return { executablePath, args: serverlessChromium.args };
+  } catch {
+    throw new Error("Could not find a valid Chrome/Chromium executable for E2E tests");
+  }
+}
+
 test("side panel completes a reviewed local handoff at narrow width", async (context) => {
-  serverlessChromium.setGraphicsMode = false;
-  const executablePath = await serverlessChromium.executablePath();
+  const { executablePath, args } = await resolveBrowser();
   const browser = await playwrightChromium.launch({
     executablePath,
     headless: true,
-    args: serverlessChromium.args,
+    args,
   });
   context.after(() => browser.close());
 
@@ -150,9 +202,8 @@ test("side panel completes a reviewed local handoff at narrow width", async (con
 });
 
 test("provider adapters pass stored fixture contracts and fail safely on drift", async (context) => {
-  serverlessChromium.setGraphicsMode = false;
-  const executablePath = await serverlessChromium.executablePath();
-  const browser = await playwrightChromium.launch({ executablePath, headless: true, args: serverlessChromium.args });
+  const { executablePath, args } = await resolveBrowser();
+  const browser = await playwrightChromium.launch({ executablePath, headless: true, args });
   context.after(() => browser.close());
   const page = await browser.newPage({ viewport: { width: 900, height: 700 } });
   const bundled = await build({

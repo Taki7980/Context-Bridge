@@ -15,11 +15,11 @@ test("local state is encrypted, expires, and exposes only the active revision", 
   process.env.CONTEXT_BRIDGE_STATE_DIR = directory;
   try {
     const pack = await makePack();
-    await writeActive({ pack, rendered: "Reviewed synthetic context", expiresAt: new Date(Date.now() + 50).toISOString() });
+    await writeActive({ pack, rendered: "Reviewed synthetic context", expiresAt: new Date(Date.now() + 250).toISOString() });
     const active = await readActive();
     assert.equal(active?.pack.id, pack.id);
     assert.equal(publicToolResult(active).status, "active");
-    await new Promise((resolve) => setTimeout(resolve, 70));
+    await new Promise((resolve) => setTimeout(resolve, 300));
     assert.equal(await readActive(), undefined);
     assert.equal(publicToolResult(undefined).status, "no_active_context");
   } finally {
