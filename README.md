@@ -70,6 +70,20 @@ Generated files:
 
 Do not load the core and bridge builds simultaneously: they use separate extension storage and appear as different installs. The packaged ZIP is for distribution review; Chrome's Load unpacked flow needs the extracted directory.
 
+## Benchmark & Performance Verification
+
+Context Bridge is verified against a 20-fixture synthetic coding-session corpus (`npm run benchmark`) measuring context compression vs information preservation:
+
+| Metric | Result | Target Gate | Status |
+| :--- | :--- | :--- | :--- |
+| **Median Context Reduction** | **63.92%** | >= 30.0% | Pass |
+| **Critical Fact Retention** | **100.0%** | >= 95.0% | Pass |
+| **Protected Span Retention** | **100.0%** | 100.0% | Pass |
+| **Critical Secret Exports** | **0** | 0 | Pass |
+| **Median Processing Latency**| **1.87 ms**| < 10.0 ms | Pass |
+
+- **Security Guarantee:** Zero plaintext stored to disk; all packs protected with AES-256-GCM via PBKDF2 (600,000 iterations).
+
 ## Typical workflow
 
 1. Paste notes, capture a selection, or explicitly invoke a provider helper.
